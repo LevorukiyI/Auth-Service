@@ -1,6 +1,5 @@
 package com.ascory.authservice.services;
 
-import com.ascory.authservice.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -11,11 +10,10 @@ import org.springframework.stereotype.Service;
 public class DefaultUserDetailsService implements UserDetailsService {
 
     @Autowired
-    private UserRepository userRepository;
+    private UserService userService;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findById(Long.parseLong(username))
-                .orElseThrow(()->new UsernameNotFoundException("Invalid Username"));
+        return userService.loadUserByUsername(username);
     }
 }
