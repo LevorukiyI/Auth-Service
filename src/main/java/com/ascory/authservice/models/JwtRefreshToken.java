@@ -19,6 +19,7 @@ public class JwtRefreshToken {
 
     private String token;
 
+    @Builder.Default
     private JwtTokenType tokenType = JwtTokenType.REFRESH;
 
     @OneToOne(fetch = FetchType.EAGER)

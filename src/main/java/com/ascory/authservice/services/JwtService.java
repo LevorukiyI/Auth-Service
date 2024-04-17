@@ -64,7 +64,7 @@ public class JwtService {
                 .compact();
     }
 
-    public boolean isTokenValid(String token, User user, JwtTokenType tokenType) {
+    public boolean isTokenValid(String token, User user, JwtTokenType tokenType) {//#TODO add user authorities validation
         Claims tokenClaims = extractAllClaims(token);
         if(isTokenExpired(tokenClaims)){
             return false;
