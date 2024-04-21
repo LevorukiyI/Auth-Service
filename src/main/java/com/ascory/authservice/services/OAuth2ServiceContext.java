@@ -6,16 +6,22 @@ import com.ascory.authservice.models.*;
 import com.ascory.authservice.repositories.UserRepository;
 import com.ascory.authservice.responses.AuthenticationResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
 import java.security.Principal;
 
+@Service
 @RequiredArgsConstructor
-public abstract class OAuth2ServiceContext{//TODO USE FACTORY
+public class OAuth2ServiceContext{//TODO USE FACTORY
 
     private final RegistrationValidator registrationValidator;
-    private final OAuth2ServiceStrategy oAuth2ServiceStrategy;
+    private OAuth2ServiceStrategy oAuth2ServiceStrategy;
     private final UserRepository userRepository;
-    private final UserFactory userFactory;
     private final AuthenticationHandler authenticationHandler;
+
+    public void setOAuth2ServiceStrategy(OAuth2ServiceStrategy oAuth2ServiceStrategy){
+        this.oAuth2ServiceStrategy = oAuth2ServiceStrategy;
+    }
 
     public AuthenticationResponse authenticate(String code) {
         String accessToken = oAuth2ServiceStrategy.getAccessToken(code);
@@ -24,8 +30,8 @@ public abstract class OAuth2ServiceContext{//TODO USE FACTORY
         return authenticationHandler.authenticateAndGetAuthenticationResponse(user);
     }
 
-    public AuthenticationResponse register(String code, RegistrationData registrationData) {
-        registrationValidator.validateRegistrationData(registrationData);
+    public AuthenticationResponse register(String code) {
+        //registrationValidator.validateRegistrationData(registrationData);
         String accessToken = oAuth2ServiceStrategy.getAccessToken(code);
         String oAuth2Id = oAuth2ServiceStrategy.getOAuth2Id(accessToken);
         if(oAuth2ServiceStrategy.existsByOAuth2Id(oAuth2Id)){

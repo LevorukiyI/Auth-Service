@@ -48,43 +48,50 @@ public class EmailPassAuthService{
             EmailPassRegisterRequestEntity emailPassRegisterRequestEntity,
             Principal principal) {//add principal as null, if you creating new user
         registrationValidator.validateEmailPassRegisterRequest(emailPassRegisterRequestEntity);
-
+        Long userId = null;
+        if(principal!=null){
+            userId = Long.valueOf(principal.getName());
+        }
         EmailPassVerificationTokenEntity emailVerificationToken =
-                emailVerificationTokenService.createToken(emailPassRegisterRequestEntity, Long.valueOf(principal.getName()));
+                emailVerificationTokenService.createToken(emailPassRegisterRequestEntity, userId);
         emailVerificationTokenService.sendVerificationEmail(
                 emailPassRegisterRequestEntity.getEmail(), emailVerificationToken.getToken());
     }
 
-    public void confirmEmailVerificationByToken(String token){
+    public void verifyEmailPassToken(String token){
         EmailPassVerificationTokenEntity verificationTokenEntity =
                 emailVerificationTokenService.getEmailPassVerificationTokenEntity(token);
         EmailPassRegisterRequestEntity registerRequestEntity = verificationTokenEntity.getRegisterRequestEntity();
 
-        User user = userRepository.getUserById(verificationTokenEntity.getPrincipal());
-        this.setEmailPassToUser(registerRequestEntity, user);
-        userRepository.save(user);
+        if(verificationTokenEntity.getPrincipal() == null){
+            this.registerUserByToken(registerRequestEntity);
+        }
+        else{
+            this.confirmEmailVerificationByToken(verificationTokenEntity, registerRequestEntity);
+        }
 
         emailVerificationTokenService.deleteTokens(verificationTokenEntity, registerRequestEntity);
     }
 
-    public void registerUserByToken(String token){
-        EmailPassVerificationTokenEntity verificationTokenEntity =
-                emailVerificationTokenService.getEmailPassVerificationTokenEntity(token);
-        EmailPassRegisterRequestEntity registerRequestEntity = verificationTokenEntity.getRegisterRequestEntity();
+    public void confirmEmailVerificationByToken(
+            EmailPassVerificationTokenEntity verificationTokenEntity,
+            EmailPassRegisterRequestEntity registerRequestEntity){
+
+        User user = userRepository.getUserById(verificationTokenEntity.getPrincipal());
+        this.setEmailPassToUser(registerRequestEntity, user);
+        userRepository.save(user);
+    }
+
+    public void registerUserByToken(
+            EmailPassRegisterRequestEntity registerRequestEntity){
 
         UserFactory userFactory = new UserFactory(passwordEncoder);
         User user = userFactory.createUser(registerRequestEntity);
         userRepository.save(user);
-
-        emailVerificationTokenService.deleteTokens(verificationTokenEntity, registerRequestEntity);
     }
 
     public void setEmailPassToUser(EmailPassRegisterRequestEntity registerRequestEntity, User user){
         user.setEmail(registerRequestEntity.getEmail());
         user.setPassword(passwordEncoder.encode(registerRequestEntity.getPassword()));//#TODO шифровать пароль перед установкой
-    }
-
-    public void addVerification() {
-
     }
 }
